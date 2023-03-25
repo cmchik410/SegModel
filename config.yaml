@@ -1,0 +1,22 @@
+DATA:
+  train: datasets/ADE20K/images/training
+  train_labels: datasets/ADE20K/annotations/training
+  val: datasets/ADE20K/images/validation
+  val_labels: datasets/ADE20K/annotations/validation
+  color_dict: datasets/ADE20K/color_dict.txt
+  dimensions: [256, 256]
+  channels: 3
+  n_classes: 150
+
+
+TRAIN:
+  ppm_output_channel: 512
+  pool_size: [1, 2, 3, 6]
+  strides: 1
+  batch_size: 16
+  epochs: 10
+  learning_rate: 0.001
+
+
+END:
+  model_path: models/PSP50

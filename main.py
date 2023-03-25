@@ -1,16 +1,27 @@
-from net.PSP import PSPnet
+import argparse
 
-INPUT_SHAPE = (None, 256, 256, 3)
-IMG_SHAPE = (256, 256, 3)
-N_CLASSES = 21
-OUTPUT_CHANNEL = 512
-STRIDES = 1
-POOL_SIZE = (1, 2, 3, 6)
+from train import train
+from yamlparser import read_config
+
 
 def main():
+    # parser = argparse.ArgumentParser(description="Semantic Segmentation Model")
     
-    m = PSPnet(IMG_SHAPE, N_CLASSES, OUTPUT_CHANNEL, POOL_SIZE, STRIDES)
-    m.build(INPUT_SHAPE)
-    m.summary()
+    # parser.add_argument("-train", type = str, help = "config file", required = False)
+    
+    # args = parser.parse_args()
+    
+    # if args.train is not None:
+    #     kwargs = read_config(args.train)
+    #     train(kwargs)
+        
+    # else:
+    #     print("No Train")
+    
+    train(read_config("config.yaml"))
+        
 
-main()
+if __name__ == "__main__":
+    main()
+    
+# python main.py -train config.yaml

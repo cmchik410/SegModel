@@ -2,7 +2,7 @@ from numpy import floor
 from keras import Model
 from keras.applications.resnet import ResNet50
 
-from keras.layers import Conv2D, AveragePooling2D, UpSampling2D
+from keras.layers import Input, Conv2D, AveragePooling2D, UpSampling2D
 from keras.layers import Concatenate
 from keras.layers import BatchNormalization
 from keras.layers import ReLU
@@ -42,14 +42,16 @@ class PPM(Model):
 
 class PSPnet(Model):
     def __init__(self,
-                 img_shape, 
-                 n_classes, 
-                 output_channel, 
-                 pooling_sizes, 
-                 strides, 
+                 img_shape = (256, 256, 3), 
+                 n_classes = 150, 
+                 output_channel = 512, 
+                 pooling_sizes = (1, 2, 3, 6), 
+                 strides = 1, 
                  **kwargs):
         
         super().__init__(**kwargs)
+        
+        self.input_layer = Input(img_shape)
         
         self.res_layer =  ResNet50(include_top = False, weights = "imagenet", input_shape = img_shape)
         
@@ -62,9 +64,9 @@ class PSPnet(Model):
         
         self.conv = Conv2D(filters = n_classes, kernel_size = 1, activation = "softmax", padding = "same")
         
-        self.up= UpSampling2D()
+        self.up= UpSampling2D(32)
         
-        self.maxArg = MaxArg()
+        self.out = self.call(self.input_layer)
 
     def call(self, inputs):
         res = self.res_layer(inputs)
@@ -80,6 +82,4 @@ class PSPnet(Model):
             
         x = self.conv(x)
         
-        x = self.up(x)
-        
-        return self.maxArg(x)
+        return self.up(x)
