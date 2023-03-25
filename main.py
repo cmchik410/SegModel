@@ -1,8 +1,7 @@
 import argparse
 
-from train import train
+from train import trainAPI
 from yamlparser import read_config
-
 
 def main():
     # parser = argparse.ArgumentParser(description="Semantic Segmentation Model")
@@ -17,8 +16,10 @@ def main():
         
     # else:
     #     print("No Train")
-    
-    train(read_config("config.yaml"))
+    kwargs = read_config("config.yaml")
+    Tr = trainAPI(**kwargs)
+
+    Tr.run()
         
 
 if __name__ == "__main__":
