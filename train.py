@@ -1,3 +1,4 @@
+from cv2 import normalize
 import tensorflow as tf
 import numpy as np
 import glob

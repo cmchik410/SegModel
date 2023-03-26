@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-def load_data(fpath, dims):
+def load_data(fpath, dims, normalize = True):
     res = []
     for f in fpath:
         temp_img = cv2.imread(f)
