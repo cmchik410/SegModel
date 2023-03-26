@@ -3,8 +3,8 @@ import numpy as np
 from glob import glob
 
 def data_shuffle(X_path, y_path):
-    X_path = np.array(glob(X_path, recursive = True))
-    y_path = np.array(glob(y_path, recursive = True))
+    X_path = np.array(sorted(glob(X_path, recursive = True)))
+    y_path = np.array(sorted(glob(y_path, recursive = True)))
 
     shuffler = np.random.permutation(X_path.shape[0])
 

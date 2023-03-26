@@ -1,33 +1,31 @@
 import argparse
 import yaml
 
+import os
+
 from glob import glob
 from tqdm import tqdm
 from time import sleep
 from tensorflow import GradientTape 
 from keras.utils import Progbar
-from keras.optimizers import Adam
-from keras.losses import BinaryCrossentropy
-from keras.metrics import BinaryAccuracy
+from keras.optimizers import SGD, Adam
+from keras.losses import CategoricalCrossentropy
+from keras.metrics import CategoricalAccuracy
 
-from losses.loss import pix_acc
+from losses.loss import NLL, pix_acc, jaccard_coef, jaccard_coef_loss
 from net.PSP import build_PSPnet
+from net.uNet import build_unet
 from utils.data import load_data, data_shuffle
 from utils.encoder import one_hot
 
-def print_status_bar(loss, train_acc):
-    info = " - loss: {loss} - Acc: {Acc}"
-
-    print(info.format(loss = loss, Acc = train_acc))
-
 def train(**kwargs):
-    # Extract Config Parameters
+    # Initializing Parameters
 
     X_train_path, y_train_path = data_shuffle(kwargs["train_path"], kwargs["train_label_path"])
     X_val_path, y_val_path = data_shuffle(kwargs["val_path"], kwargs["val_label_path"])
 
-    X_train_path = X_train_path[0:32]
-    y_train_path = y_train_path[0:32]
+    # X_train_path = X_train_path[0:2048]
+    # y_train_path = y_train_path[0:2048]
 
     img_shape = tuple(kwargs["dimensions"]) + (kwargs["channels"], )
     n_classes = kwargs["n_classes"]
@@ -43,16 +41,15 @@ def train(**kwargs):
 
     # Preparing Training Model
     m = build_PSPnet(img_shape, n_classes, output_channels, pooling_sizes, strides)
-    opt = Adam(learning_rate = lr)
-    loss_fcn = BinaryCrossentropy()
-    train_acc_metric = BinaryAccuracy()
-    val_acc_metric = BinaryAccuracy()
-
+    opt = SGD(learning_rate = lr)
+    loss_fcn = CategoricalCrossentropy()
+    train_acc_metric = CategoricalAccuracy()
+    val_acc_metric = CategoricalAccuracy()
     metrics_names = ['loss','acc'] 
 
     m.summary()
 
-    # Build Training Loop
+    # Start Training Loop
     for ep in range(1, epochs + 1):
         print("Epochs : %d / %d" %(ep, epochs))
 
@@ -64,7 +61,7 @@ def train(**kwargs):
         for stp in range(steps):
             # Training 
 
-            X_batch = load_data(X_train_path[start:end], img_shape[0:2]) / 255.
+            X_batch = load_data(X_train_path[start:end], img_shape[0:2])
             y_true = load_data(y_train_path[start:end], img_shape[0:2])
             y_true = one_hot(y_true, n_classes)
 
@@ -74,6 +71,8 @@ def train(**kwargs):
                 loss_value = loss_fcn(y_true, y_pred)
 
                 train_acc_metric.update_state(y_true, y_pred)
+
+                #train_acc = train_acc_metric(y_true, y_pred)
 
             grads = tape.gradient(loss_value, m.trainable_weights)
 
@@ -96,6 +95,8 @@ def train(**kwargs):
             # val_acc = val_acc_metric.result()
             # val_acc_metric.reset_states()
 
+
+            # Update Progress Bar
             sleep(0.3)
         
             values=[('loss', loss_value), ('acc', train_acc)]
