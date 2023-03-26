@@ -1,0 +1,5 @@
+img_path : 
+dimensions: [128, 128]
+channels: 3
+model_path : models/PSP50_001
+color_dict: datasets/ADE20K/color_dict.txt

@@ -1,10 +1,6 @@
 import argparse
 import yaml
 
-import os
-
-from glob import glob
-from tqdm import tqdm
 from time import sleep
 from tensorflow import GradientTape 
 from keras.utils import Progbar
@@ -12,9 +8,8 @@ from keras.optimizers import SGD, Adam
 from keras.losses import CategoricalCrossentropy
 from keras.metrics import CategoricalAccuracy
 
-from losses.loss import NLL, pix_acc, jaccard_coef, jaccard_coef_loss
+from losses.loss import NLL, pix_acc
 from net.PSP import build_PSPnet
-from net.uNet import build_unet
 from utils.data import load_data, data_shuffle
 from utils.encoder import one_hot
 
@@ -35,6 +30,7 @@ def train(**kwargs):
     batch_size = kwargs["batch_size"]
     lr = kwargs["learning_rate"]
     epochs = kwargs["epochs"]
+    save_model_path = kwargs["save_model_path"]
 
     total_examples = len(X_train_path)
     steps = total_examples // batch_size
@@ -105,6 +101,8 @@ def train(**kwargs):
 
             start += batch_size
             end += batch_size
+
+    m.save(save_model_path)
 
 
 if __name__ == "__main__":

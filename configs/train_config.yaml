@@ -12,4 +12,4 @@ strides: 1
 batch_size: 16
 epochs: 5
 learning_rate: 0.01
-model_path: models/PSP50
+save_model_path: models/PSP50_001
