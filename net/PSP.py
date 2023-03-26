@@ -35,7 +35,9 @@ def build_PSPnet(img_shape, n_classes, output_channels, pooling_sizes, strides):
     
     x = Conv2D(filters = n_classes, kernel_size = 1, activation = "softmax", padding = "same")(x)
 
-    x = UpSampling2D((32, 32))(x)
+    ps = int(img_shape[0] / x.shape[1])
+
+    x = UpSampling2D(ps)(x)
 
     model = Model(inputs = inputs, outputs = x)
 

@@ -1,5 +1,15 @@
 import cv2
 import numpy as np
+from glob import glob
+
+def data_shuffle(X_path, y_path):
+    X_path = np.array(glob(X_path, recursive = True))
+    y_path = np.array(glob(y_path, recursive = True))
+
+    shuffler = np.random.permutation(X_path.shape[0])
+
+    return X_path[shuffler], y_path[shuffler]
+
 
 def load_data(fpath, dims):
     res = []
