@@ -1,8 +1,8 @@
 DATA:
-  train: datasets/ADE20K/images/training
-  train_labels: datasets/ADE20K/annotations/training
-  val: datasets/ADE20K/images/validation
-  val_labels: datasets/ADE20K/annotations/validation
+  train: datasets/ADE20K/images/training/*.jpg
+  train_labels: datasets/ADE20K/annotations/training/*.png
+  val: datasets/ADE20K/images/validation/*.jpg
+  val_labels: datasets/ADE20K/annotations/validation/*.png
   color_dict: datasets/ADE20K/color_dict.txt
   dimensions: [256, 256]
   channels: 3
@@ -14,7 +14,7 @@ TRAIN:
   pool_size: [1, 2, 3, 6]
   strides: 1
   batch_size: 16
-  epochs: 10
+  epochs: 1
   learning_rate: 0.001
 
 

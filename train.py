@@ -13,10 +13,10 @@ from tensorflow.keras.optimizers import Adam
 
 class trainAPI(object):
     def __init__(self, **kwargs):
-        self.X_train = glob.glob(kwargs["train_path"])
-        self.y_train = glob.glob(kwargs["train_label_path"])
-        self.X_val = glob.glob(kwargs["val_path"])
-        self.y_val = glob.glob(kwargs["val_label_path"])
+        self.X_train = np.array(glob.glob(kwargs["train_path"], recursive = True))[0:16]
+        self.y_train = np.array(glob.glob(kwargs["train_label_path"], recursive = True))[0:16]
+        self.X_val = np.array(glob.glob(kwargs["val_path"], recursive = True))
+        self.y_val = np.array(glob.glob(kwargs["val_label_path"], recursive = True))
         self.total_train = len(self.X_train)
         self.total_val = len(self.X_val)
         
@@ -42,6 +42,7 @@ class trainAPI(object):
         print("\r{}/{} - ".foramt(iteration, total) + metrics, end = end)
     
     def run(self):
+        print(type(self.X_train))
         m = PSPnet(self.img_shape, self.n_classes, self.out_ch, self.pool_size, self.strides)
         opt = Adam(learning_rate = self.lr)
         loss_fn = pix_acc
@@ -55,9 +56,15 @@ class trainAPI(object):
 
         for epoch in range(1, self.n_epochs + 1):
             print("Epoch {}/{}".format(epoch, self.n_epochs))
-            X_batch = load_data(self.X_train[random_idx[start:end]])
-            y_batch = load_data(self.y_train[random_idx[start:end]])
+            X_batch = load_data(self.X_train[random_idx[start:end]], self.dims)
+            y_batch = load_data(self.y_train[random_idx[start:end]], self.dims)
+            print(X_batch.shape)
+            print(y_batch.shape)
+            return
             y_batch = one_hot(y_batch, self.n_classes)
+
+            print(X_batch.shape)
+            print(y_batch.shape)
                             
             for step in range(1, self.n_steps + 1):
                 with tf.GradientTape() as tape:
@@ -67,6 +74,7 @@ class trainAPI(object):
                     
                 gradients = tape.gradient(loss, m.trainable_variables)
                 opt.apply_gradients(zip(gradients, m.trainable_variables))
+                print("Done steps")
 
             start += self.batch_size
             end += self.batch_size
