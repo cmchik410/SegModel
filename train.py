@@ -1,3 +1,4 @@
+from cv2 import normalize
 import tensorflow as tf
 import numpy as np
 import glob
@@ -55,10 +56,10 @@ class trainAPI(object):
 
         for epoch in range(1, self.n_epochs + 1):
             print("Epoch {}/{}".format(epoch, self.n_epochs))
-            X_batch = load_data(self.X_train[random_idx[start:end]])
-            y_batch = load_data(self.y_train[random_idx[start:end]])
+            X_batch = load_data(self.X_train[random_idx[start:end]], self.dims)
+            y_batch = load_data(self.y_train[random_idx[start:end]], self.dims)
             y_batch = one_hot(y_batch, self.n_classes)
-                            
+            print(X_batch)
             for step in range(1, self.n_steps + 1):
                 with tf.GradientTape() as tape:
                     y_pred = m(X_batch, training = True)
