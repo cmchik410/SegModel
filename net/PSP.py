@@ -1,85 +1,45 @@
+
 from numpy import floor
 from keras import Model
 from keras.applications.resnet import ResNet50
 
 from keras.layers import Input, Conv2D, AveragePooling2D, UpSampling2D
-from keras.layers import Concatenate
+from keras.layers import concatenate
 from keras.layers import BatchNormalization
 from keras.layers import ReLU
 
-from layers.maxarg import MaxArg
+def PPM(x, img_shape, output_channels, kernel_size, strides):
+    H, W, C = img_shape
 
-class PPM(Model):
-    def __init__(self,
-                 img_shape, 
-                 output_channel, 
-                 pooling_size, 
-                 strides, 
-                 **kwargs):
-        
-        super().__init__(**kwargs)
-        
-        self.H, self.W, self.C = img_shape
-        
-        self.ps1 = floor(self.H - ((pooling_size - 1) * strides)).astype(int)
-        self.ps2 = floor(self.W - ((pooling_size - 1) * strides)).astype(int)
+    pool_size = floor(H - ((kernel_size - 1) * strides)).astype(int)
+
+    x = AveragePooling2D(pool_size = (pool_size, pool_size), strides = strides, padding = "same")(x)
+    x = Conv2D(output_channels, kernel_size = kernel_size, strides = strides, padding = "same")(x)
+    x = BatchNormalization()(x)
+    x = ReLU()(x)
+
+    return x
     
-        
-        self.avgPool1 = AveragePooling2D(pool_size = (self.ps1, self.ps2), strides = strides, padding = "same")
-        self.Conv2D = Conv2D(output_channel, kernel_size = pooling_size, strides = strides, padding = "same")
-        self.Bn1 = BatchNormalization()
-        self.relu1 = ReLU()
-        
-        
-    def call(self, inputs):
-        x = self.avgPool1(inputs)
-        x = self.Conv2D(x)
-        x = self.Bn1(x)
 
-        return self.relu1(x)
+def build_PSPnet(img_shape, n_classes, output_channels, pooling_sizes, strides):
+    inputs = Input(img_shape)
+
+    x = ResNet50(include_top = False, weights = "imagenet", input_shape = img_shape)(inputs)
+
+    concatenation_layers = []
+    for ps in pooling_sizes:
+        concatenation_layers.append(PPM(x, img_shape, output_channels, ps, strides))
+    
+    for cl in concatenation_layers:
+        x = concatenate([x, cl])
+    
+    x = Conv2D(filters = n_classes, kernel_size = 1, activation = "softmax", padding = "same")(x)
+
+    x = UpSampling2D((32, 32))(x)
+
+    model = Model(inputs = inputs, outputs = x)
+
+    return model
 
 
 
-class PSPnet(Model):
-    def __init__(self,
-                 img_shape = (256, 256, 3), 
-                 n_classes = 150, 
-                 output_channel = 512, 
-                 pooling_sizes = (1, 2, 3, 6), 
-                 strides = 1, 
-                 **kwargs):
-        
-        super().__init__(**kwargs)
-        
-        self.input_layer = Input(img_shape)
-        
-        self.res_layer =  ResNet50(include_top = False, weights = "imagenet", input_shape = img_shape)
-        
-        self.PPM_layers = []
-        
-        for ps in pooling_sizes:
-            self.PPM_layers.append(PPM(img_shape, output_channel, ps, strides))
-        
-        self.concat = Concatenate()
-        
-        self.conv = Conv2D(filters = n_classes, kernel_size = 1, activation = "softmax", padding = "same")
-        
-        self.up= UpSampling2D(32)
-        
-        self.out = self.call(self.input_layer)
-
-    def call(self, inputs):
-        res = self.res_layer(inputs)
-        
-        x = res
-        
-        ppms = []
-        for ppm_layer in self.PPM_layers:
-            ppms.append(ppm_layer(x))
-        
-        for c in ppms:
-            x = self.concat([x, c])
-            
-        x = self.conv(x)
-        
-        return self.up(x)

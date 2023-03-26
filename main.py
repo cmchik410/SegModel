@@ -1,6 +1,7 @@
 import argparse
 
-from train import trainAPI
+from tempTrain import trainAPI
+from net.PSP import build_PSPnet
 from yamlparser import read_config
 
 def main():
@@ -16,10 +17,13 @@ def main():
         
     # else:
     #     print("No Train")
-    kwargs = read_config("config.yaml")
-    Tr = trainAPI(**kwargs)
+    # kwargs = read_config("config.yaml")
+    # Tr = trainAPI(**kwargs)
 
-    Tr.run()
+    # Tr.run()
+
+    m = build_PSPnet((256, 256, 3), 150, 512, (1,2,3,6), 1)
+    m.summary()
         
 
 if __name__ == "__main__":

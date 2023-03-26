@@ -1,92 +1,71 @@
-from cv2 import normalize
+import argparse
+import yaml
+
 import tensorflow as tf
-import numpy as np
-import glob
-import cv2
 
-from net.PSP import PSPnet
+from glob import glob
+from tqdm import tqdm
+from keras.optimizers import Adam
+from keras.losses import BinaryCrossentropy
+
 from losses.loss import pix_acc
-from data import load_data
-from encoder import one_hot
-from keras.metrics import Mean, MeanAbsoluteError
-from tensorflow.keras.optimizers import Adam
+from net.PSP import build_PSPnet
+from utils.data import load_data
+from utils.encoder import one_hot
 
 
-class trainAPI(object):
-    def __init__(self, **kwargs):
-        self.X_train = np.array(glob.glob(kwargs["train_path"], recursive = True))[0:16]
-        self.y_train = np.array(glob.glob(kwargs["train_label_path"], recursive = True))[0:16]
-        self.X_val = np.array(glob.glob(kwargs["val_path"], recursive = True))
-        self.y_val = np.array(glob.glob(kwargs["val_label_path"], recursive = True))
-        self.total_train = len(self.X_train)
-        self.total_val = len(self.X_val)
-        
-        self.dims = kwargs["dimensions"]
-        self.ch = kwargs["channels"]
-        self.img_shape = self.dims + (self.ch, )
-        self.n_classes = kwargs["n_classes"]
-        self.out_ch = kwargs["ppm_output_channel"]
-        self.pool_size = kwargs["pool_size"]
-        self.strides = kwargs["strides"]
-        
-        self.batch_size = kwargs["batch_size"]
-        self.n_epochs = kwargs["epochs"]
-        self.n_steps = self.total_train // self.batch_size
-        self.lr = kwargs["learning_rate"]
-        
-        self.save_model_path = kwargs["model_path"]
-    
-    def print_status_bar(self, iteration, total, loss, metrics = None):
-        metrics = " - ".join(["{}: {:.4f}".format(m.name, m.result()) 
-                                        for m in [loss] + (metrics or [])])
-        end = " " if iteration < total else "\n"
-        print("\r{}/{} - ".foramt(iteration, total) + metrics, end = end)
-    
-    def run(self):
-        print(type(self.X_train))
-        m = PSPnet(self.img_shape, self.n_classes, self.out_ch, self.pool_size, self.strides)
-        opt = Adam(learning_rate = self.lr)
-        loss_fn = pix_acc
-        mean_loss = Mean()
-        metrics = MeanAbsoluteError()
 
-        random_idx = np.random.permutation(np.arange(self.total_train))
-        
+def train(**kwargs):
+    X_train_path = glob(kwargs["train_path"], recursive = True)
+    y_train_path = glob(kwargs["train_label_path"], recursive = True)
+
+    img_shape = tuple(kwargs["dimensions"]) + (kwargs["channels"], )
+    n_classes = kwargs["n_classes"]
+    output_channels = kwargs["ppm_output_channels"]
+    pooling_sizes = tuple(kwargs["pooling_sizes"])
+    strides = kwargs["strides"]
+    batch_size = kwargs["batch_size"]
+    lr = kwargs["learning_rate"]
+    epochs = kwargs["epochs"]
+
+    steps = epochs / len(X_train_path)
+
+    m = build_PSPnet(img_shape, n_classes, output_channels, pooling_sizes, strides)
+    opt = Adam(learning_rate = lr)
+    loss_fcn = BinaryCrossentropy()
+
+    for ep in epochs:
+        print("Epochs : %d / %d" %(ep, epochs))
+
         start = 0
-        end = self.batch_size
+        end = batch_size
 
-        for epoch in range(1, self.n_epochs + 1):
-            print("Epoch {}/{}".format(epoch, self.n_epochs))
-            X_batch = load_data(self.X_train[random_idx[start:end]], self.dims)
-            y_batch = load_data(self.y_train[random_idx[start:end]], self.dims)
-            print(X_batch.shape)
-            print(y_batch.shape)
-            return
-            y_batch = one_hot(y_batch, self.n_classes)
+        X_batch = load_data(X_train_path, img_shape[0:1]) / 255.
+        y_true = load_data(y_train_path, img_shape[0:1])
+        y_true = one_hot(y_true, n_classes)
 
-            print(X_batch.shape)
-            print(y_batch.shape)
-                            
-            for step in range(1, self.n_steps + 1):
-                with tf.GradientTape() as tape:
-                    y_pred = m(X_batch, training = True)
-                    main_loss = tf.reduce_mean(loss_fn(y_batch, y_pred))
-                    loss = tf.add_n([main_loss] + m.losses)
-                    
-                gradients = tape.gradient(loss, m.trainable_variables)
-                opt.apply_gradients(zip(gradients, m.trainable_variables))
-                print("Done steps")
+        for stp in tqdm(range(steps)):
+            with tf.GradientTape() as tape:
+                y_pred = m(X_batch, training = True)
 
-            start += self.batch_size
-            end += self.batch_size
+                loss_value = loss_fcn(y_true, y_pred)
 
-            self.print_status_bar(step * self.batch_size, len(self.total_train), mean_loss, metrics)
+        grads = tape.gradient(loss_value, m.trainable_weights)
 
-            for metric in [mean_loss] + metrics:
-                metric.reset_states()
+        opt.apply_gradients(zip(grads, m.trainable_weights))
 
-        
-    
-# m = PSPnet(IMG_SHAPE, N_CLASSES, OUTPUT_CHANNEL, POOL_SIZE, STRIDES)
-# m.build(INPUT_SHAPE)
-# m.summary()
+            
+
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description = "Pyramid Scene Parsing Net 50 Training")
+
+    parser.add_argument("--cfg", default = "configs/train_config.yaml", help = "path to train config file", type = str)
+
+    args = parser.parse_args()
+
+    with open(args.cfg, "r") as fp:
+        kwargs = yaml.load(fp, Loader = yaml.FullLoader)
+
+    train(**kwargs)
