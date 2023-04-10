@@ -1,6 +1,7 @@
 import argparse
 import yaml
 
+import numpy as np
 from time import sleep
 from tensorflow import GradientTape 
 from keras.utils import Progbar
@@ -8,7 +9,6 @@ from keras.optimizers import SGD, Adam
 from keras.losses import CategoricalCrossentropy
 from keras.metrics import CategoricalAccuracy
 
-from losses.loss import NLL, pix_acc
 from net.PSP import build_PSPnet
 from utils.data import load_data, data_shuffle
 from utils.encoder import one_hot
@@ -68,7 +68,7 @@ def train(**kwargs):
 
                 train_acc_metric.update_state(y_true, y_pred)
 
-                #train_acc = train_acc_metric(y_true, y_pred)
+                train_acc = train_acc_metric(y_true, y_pred)
 
             grads = tape.gradient(loss_value, m.trainable_weights)
 
@@ -90,7 +90,6 @@ def train(**kwargs):
 
             # val_acc = val_acc_metric.result()
             # val_acc_metric.reset_states()
-
 
             # Update Progress Bar
             sleep(0.3)

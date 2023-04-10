@@ -13,6 +13,8 @@ def visualize_result(y_pred, color_dict_path, channels):
 
     seg_img = decoder(y_pred, color_dict, channels)
 
+    cv2.imshow(seg_img)
+
 
 def eval(**kwargs):
     img_path = kwargs["img_path"]
