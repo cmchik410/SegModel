@@ -19,8 +19,10 @@ def train(**kwargs):
     X_train_path, y_train_path = data_shuffle(kwargs["train_path"], kwargs["train_label_path"])
     X_val_path, y_val_path = data_shuffle(kwargs["val_path"], kwargs["val_label_path"])
 
-    # X_train_path = X_train_path[0:2048]
-    # y_train_path = y_train_path[0:2048]
+    X_train_path = X_train_path[0:48]
+    y_train_path = y_train_path[0:48]
+    X_val_path = X_val_path[0:32]
+    y_val_path = y_val_path[0:32]
 
     img_shape = tuple(kwargs["dimensions"]) + (kwargs["channels"], )
     n_classes = kwargs["n_classes"]
@@ -32,8 +34,10 @@ def train(**kwargs):
     epochs = kwargs["epochs"]
     save_model_path = kwargs["save_model_path"]
 
-    total_examples = len(X_train_path)
-    steps = total_examples // batch_size
+    train_examples = len(X_train_path)
+    val_examples = len(X_val_path)
+    train_steps = train_examples // batch_size
+    val_steps = val_examples // batch_size
 
     # Preparing Training Model
     m = build_PSPnet(img_shape, n_classes, output_channels, pooling_sizes, strides)
@@ -52,9 +56,9 @@ def train(**kwargs):
         start = 0
         end = batch_size
 
-        pb = Progbar(total_examples, stateful_metrics = metrics_names)
+        pb = Progbar(train_examples, stateful_metrics = metrics_names)
 
-        for stp in range(steps):
+        for stp in range(train_steps):
             # Training 
 
             X_batch = load_data(X_train_path[start:end], img_shape[0:2])
@@ -68,8 +72,6 @@ def train(**kwargs):
 
                 train_acc_metric.update_state(y_true, y_pred)
 
-                train_acc = train_acc_metric(y_true, y_pred)
-
             grads = tape.gradient(loss_value, m.trainable_weights)
 
             opt.apply_gradients(zip(grads, m.trainable_weights))
@@ -78,20 +80,6 @@ def train(**kwargs):
 
             train_acc_metric.reset_states()
 
-            # # Validation
-
-            # X_val_batch = load_data(X_val_path[0:batch_size], img_shape[0:2]) / 255.
-            # y_val_true = load_data(y_val_path[0:batch_size], img_shape[0:2])
-            # y_val_true = one_hot(y_val_true, n_classes)
-
-            # y_val_pred = m(X_val_batch, training = False)
-
-            # val_acc_metric.update_state(y_val_true, y_val_pred)
-
-            # val_acc = val_acc_metric.result()
-            # val_acc_metric.reset_states()
-
-            # Update Progress Bar
             sleep(0.3)
         
             values=[('loss', loss_value), ('acc', train_acc)]
@@ -101,7 +89,33 @@ def train(**kwargs):
             start += batch_size
             end += batch_size
 
-    m.save(save_model_path)
+        # # Validation
+        start = 0
+        end = batch_size
+
+        pb = Progbar(val_examples, stateful_metrics = metrics_names)
+
+        for stp in range(val_steps):
+            X_val_batch = load_data(X_val_path[start : end], img_shape[0:2]) / 255.
+            y_val_true = load_data(y_val_path[start : end], img_shape[0:2])
+            y_val_true = one_hot(y_val_true, n_classes)
+
+            y_val_pred = m(X_val_batch, training = False)
+            val_loss = loss_fcn(y_val_true, y_val_pred)
+
+            val_acc_metric.update_state(y_val_true, y_val_pred)
+
+            val_acc = val_acc_metric.result()
+            val_acc_metric.reset_states()
+                    
+            values=[('loss', val_loss), ('acc', val_acc)]
+        
+            pb.add(batch_size, values = values)
+
+            start += batch_size
+            end += batch_size
+
+    #m.save(save_model_path)
 
 
 if __name__ == "__main__":
