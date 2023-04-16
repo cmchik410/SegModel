@@ -3,18 +3,22 @@ import yaml
 import json
 import cv2
 
-from keras.models import load_model
+from tensorflow.keras.models import load_model
 from utils.encoder import decoder
 
 
 def visualize_result(y_pred, color_dict_path, channels):
+    color_dict = {}
+    temp_dict = {}
     with open(color_dict_path, 'r') as fp:
-        color_dict = json.dump(fp)
+        temp_dict = json.load(fp)
+        
+    for k, v in temp_dict.items():
+        color_dict[int(k)] = v
 
     seg_img = decoder(y_pred, color_dict, channels)
-
-    cv2.imshow(seg_img)
-
+    
+    #cv2.imshow("Seg", seg_img)
 
 def eval(**kwargs):
     img_path = kwargs["img_path"]
@@ -24,15 +28,14 @@ def eval(**kwargs):
 
     img = cv2.imread(img_path)
     img = cv2.resize(img, img_shape[0:2], interpolation = cv2.INTER_NEAREST)
+    img = img.reshape((1,) + img_shape)
 
     m = load_model(model_path)
     m.summary()
     
     y_pred = m(img)
-
-    visualize_result(y_pred, color_dict_path, img_shape[-1])
-
-
+    
+    visualize_result(y_pred[0], color_dict_path, img_shape[-1])
 
 
 if __name__ == "__main__":

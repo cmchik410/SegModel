@@ -1,5 +1,5 @@
-img_path : 
-dimensions: [128, 128]
+img_path : datasets\ADE20K\images\training\ADE_train_00000001.jpg
+dimensions: [256, 256]
 channels: 3
 model_path : models/PSP50_001
 color_dict: datasets/ADE20K/color_dict.txt

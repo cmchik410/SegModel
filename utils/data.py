@@ -10,7 +10,6 @@ def data_shuffle(X_path, y_path):
 
     return X_path[shuffler], y_path[shuffler]
 
-
 def load_data(fpath, dims):
     res = []
     for f in fpath:

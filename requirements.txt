@@ -1,6 +1,0 @@
-python==3.9.16
-tensorflow-macos==2.10
-tensorflow-metal==0.6.0
-opencv-python==4.7
-tqdm==4.65
-pyyaml==6.0
