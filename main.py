@@ -15,8 +15,8 @@ from utils.training import train_step, val_step
 def main(**kwargs):
     # Initializing Parameters
 
-    X_train_path, y_train_path = data_shuffle(kwargs["train_path"], kwargs["train_label_path"])
-    X_val_path, y_val_path = data_shuffle(kwargs["val_path"], kwargs["val_label_path"])
+    X_train_path, y_train_path = data_shuffle(kwargs["train_path"], kwargs["train_label_path"], ratio = 0.1)
+    X_val_path, y_val_path = data_shuffle(kwargs["val_path"], kwargs["val_label_path"], ratio = 0.1)
 
     # X_train_path = X_train_path[0:48]
     # y_train_path = y_train_path[0:48]
@@ -35,7 +35,7 @@ def main(**kwargs):
 
     # Preparing Training Model
     m = build_PSPnet(img_shape, n_classes, output_channels, pooling_sizes, strides)
-    opt = SGD(learning_rate = lr)
+    opt = Adam(learning_rate = lr)
     loss_fcn = CategoricalCrossentropy()
     train_acc_metric = CategoricalAccuracy()
     val_acc_metric = CategoricalAccuracy()
@@ -63,17 +63,18 @@ def main(**kwargs):
         history["val_loss"].append(val_loss.numpy().tolist())
         history["val_acc"].append(val_acc.numpy().tolist())
         
-        Reduce_LR(opt, "val_loss", history, decay = 0.9, patience = 5, minimum = 1e-4, verbose = 1)
+        Reduce_LR(opt, "val_loss", history, decay = 0.9, patience = 2, minimum = 1e-4, verbose = 1)
         
-        if get_best_model("val_loss", history, patience = 5, verbose = 1):
+        if get_best_model("val_loss", history, patience = 2, verbose = 1):
             m = best_model
         else:
-            best_model = m
+            best_model = m  
+
+        saved_path = save_model_path + "_" + str(ep)
+        m.save(saved_path)
     
     with open("history.txt", "w") as fp:
-        json.dump(history, fp)    
-
-    m.save(save_model_path)
+        json.dump(history, fp)  
 
 
 if __name__ == "__main__":
