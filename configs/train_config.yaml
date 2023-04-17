@@ -3,13 +3,13 @@ train_label_path: datasets/ADE20K/annotations/training/*.png
 val_path: datasets/ADE20K/images/validation/*.jpg
 val_label_path: datasets/ADE20K/annotations/validation/*.png
 color_dict: datasets/ADE20K/color_dict.txt
-dimensions: [256, 256]
+dimensions: [128, 128]
 channels: 3
 n_classes: 150
 ppm_output_channels: 512
 pooling_sizes: [1, 2, 3, 6]
 strides: 1
 batch_size: 16
-epochs: 100
+epochs: 10
 learning_rate: 0.01
 save_model_path: models/PSP50_001

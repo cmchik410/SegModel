@@ -3,7 +3,7 @@ import yaml
 import json
 import cv2
 
-from tensorflow.keras.models import load_model
+from keras.models import load_model
 from utils.encoder import decoder
 
 

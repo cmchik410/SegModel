@@ -1,12 +1,12 @@
 
 from numpy import floor
-from tensorflow.keras import Model
-from tensorflow.keras.applications.resnet import ResNet50
+from keras import Model
+from keras.applications.resnet import ResNet50
 
-from tensorflow.keras.layers import Input, Conv2D, AveragePooling2D, UpSampling2D
-from tensorflow.keras.layers import concatenate
-from tensorflow.keras.layers import BatchNormalization
-from tensorflow.keras.layers import ReLU
+from keras.layers import Input, Conv2D, AveragePooling2D, UpSampling2D
+from keras.layers import concatenate
+from keras.layers import BatchNormalization
+from keras.layers import ReLU
 
 def PPM(x, img_shape, output_channels, kernel_size, strides):
     H, W, C = img_shape

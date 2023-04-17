@@ -31,7 +31,7 @@ def get_best_model(scores, history, patience = 2, verbose = 0):
     if avg - temp[-1] <= 0:
         if verbose:
             print("\n Retrieve best model")
-        return True 
+        return True
     
     return False
     

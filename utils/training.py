@@ -1,10 +1,11 @@
 from time import sleep
 
-from tensorflow.keras.utils import Progbar
+from keras.utils import Progbar
 from tensorflow import GradientTape
  
 from utils.data import load_data
 from utils.encoder import one_hot
+
 
 def train_step(model, X_path, y_path, img_shape, n_classes, batch_size, opt, loss_fcn, metric):
     n_samples = len(X_path)
@@ -20,7 +21,7 @@ def train_step(model, X_path, y_path, img_shape, n_classes, batch_size, opt, los
 
     for stp in range(1, n_steps + 1):
         # Training 
-        X_batch = load_data(X_path[start:end], img_shape[0:2])
+        X_batch = load_data(X_path[start:end], img_shape[0:2]) / 255.
         y_true = load_data(y_path[start:end], img_shape[0:2])
         y_true = one_hot(y_true, n_classes)
 
@@ -53,7 +54,7 @@ def train_step(model, X_path, y_path, img_shape, n_classes, batch_size, opt, los
         
     return model, avg_loss, avg_acc
     
-    
+
 def val_step(model, X_path, y_path, img_shape, n_classes, batch_size, loss_fcn, metric):
     n_samples = len(X_path)
     n_steps = n_samples // batch_size
@@ -67,7 +68,7 @@ def val_step(model, X_path, y_path, img_shape, n_classes, batch_size, loss_fcn, 
     avg_acc = 0.0
 
     for stp in range(1, n_steps + 1):
-        X_batch = load_data(X_path[start : end], img_shape[0:2])
+        X_batch = load_data(X_path[start : end], img_shape[0:2]) / 255.0
         y_true = load_data(y_path[start : end], img_shape[0:2])
         y_true = one_hot(y_true, n_classes)
         
