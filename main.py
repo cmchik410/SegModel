@@ -2,9 +2,9 @@ import argparse
 import yaml
 import json
 
-from keras.optimizers import SGD, Adam
-from keras.losses import CategoricalCrossentropy, SparseCategoricalCrossentropy
-from keras.metrics import CategoricalAccuracy, SparseCategoricalAccuracy
+from tensorflow.keras.optimizers import SGD, Adam
+from tensorflow.keras.losses import CategoricalCrossentropy, SparseCategoricalCrossentropy
+from tensorflow.keras.metrics import CategoricalAccuracy, SparseCategoricalAccuracy
 
 from net.PSP import build_PSPnet
 from callbacks.callbacks import Reduce_LR

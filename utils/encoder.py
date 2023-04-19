@@ -8,6 +8,7 @@ def one_hot(targets, n_classes):
     return res.reshape(list(targets.shape)+[n_classes])
 
 
+
 def decoder(targets, color_dict, channels = 3):
     img_shape = targets.shape[:2] + (channels,)
     single_layer = np.argmax(targets, axis = -1)

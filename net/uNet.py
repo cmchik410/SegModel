@@ -1,7 +1,7 @@
-from keras import Model
-from keras.layers import concatenate
-from keras.layers import Input, Conv2D, Dense, Flatten, MaxPooling2D, Conv2DTranspose
-from keras.layers import Dropout
+from tensorflow.keras import Model
+from tensorflow.keras.layers import concatenate
+from tensorflow.keras.layers import Input, Conv2D, Dense, Flatten, MaxPooling2D, Conv2DTranspose
+from tensorflow.keras.layers import Dropout
 
 
 def build_unet(img_shape, n_classes):

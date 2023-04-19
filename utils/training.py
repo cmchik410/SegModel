@@ -1,6 +1,6 @@
 from time import sleep
 
-from keras.utils import Progbar
+from tensorflow.keras.utils import Progbar
 from tensorflow import GradientTape
  
 from utils.data import load_data
